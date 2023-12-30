@@ -14,6 +14,21 @@
   <div class="card">
   <div class="card-body">
     <h1>Products</h1>
+      <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th><th>Name</th><th>Quantity</th><th>Price</th>
+        </tr>
+        </thead>
+          <tbody>
+          <tr th:each="p:${products}">
+              <td th:text="${p.id}"></td>
+              <td th:text="${p.name}"></td>
+              <td th:text="${p.quantity}"></td>
+              <td th:text="${p.price}"></td>
+          </tr>
+          </tbody>
+      </table>
   </div>
 </div></div>
 

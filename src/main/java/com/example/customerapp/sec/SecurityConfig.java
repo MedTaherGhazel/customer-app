@@ -1,11 +1,13 @@
 package com.example.customerapp.sec;
 
+import org.springframework.boot.web.server.ErrorPage;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
@@ -21,7 +23,7 @@ import java.util.*;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    private ClientRegistrationRepository clientRegistrationRepository;
+    private final ClientRegistrationRepository clientRegistrationRepository;
     public SecurityConfig(ClientRegistrationRepository clientRegistrationRepository) {
         this.clientRegistrationRepository = clientRegistrationRepository;
     }
@@ -29,13 +31,18 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(Customizer.withDefaults())
-                .authorizeHttpRequests(ar->ar.requestMatchers("/","/webjars/**","/h2-console/**").permitAll())
+                .authorizeHttpRequests(ar->ar.requestMatchers("/","/webjars/**","/h2-console/**","/oauth2Login").permitAll())
                 .authorizeHttpRequests(ar->ar.anyRequest().authenticated())
-                .oauth2Login(Customizer.withDefaults())
+                .headers(h->h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .csrf(csrf->csrf.ignoringRequestMatchers("/h2-console/**"))
+                .oauth2Login(al->
+                        al.loginPage("/oauth2Login").defaultSuccessUrl("/")
+                )
                 .logout((logout)-> logout
                         .logoutSuccessHandler(oidcLogoutSuccessHandler())
                         .logoutSuccessUrl("/").permitAll()
-                        .deleteCookies("JSESSIONID"))
+                        .deleteCookies("JSESSIONID")
+                )
                 .exceptionHandling(eh->eh.accessDeniedPage("/notAuthorized"))
                 .build();
     }
